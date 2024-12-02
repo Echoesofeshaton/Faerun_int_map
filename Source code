@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Map with Notes</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    #map {
+      height: 100vh;
+    }
+    .leaflet-popup-content-wrapper {
+      max-width: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Initialize the map
+    const map = L.map('map').setView([51.505, -0.09], 13); // Default location (London)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Retrieve saved pins from localStorage
+    const savedPins = JSON.parse(localStorage.getItem('mapPins')) || [];
+
+    // Function to save pins to localStorage
+    function savePins(pins) {
+      localStorage.setItem('mapPins', JSON.stringify(pins));
+    }
+
+    // Add markers for saved pins
+    savedPins.forEach(({ lat, lng, note }) => {
+      const marker = L.marker([lat, lng]).addTo(map);
+      marker.bindPopup(note || 'No note added');
+    });
+
+    // Add click event to create a pin
+    map.on('click', (e) => {
+      const { lat, lng } = e.latlng;
+      const note = prompt('Enter a note for this pin:');
+      if (note !== null) {
+        // Create a new pin
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup(note || 'No note added').openPopup();
+
+        // Save pin to localStorage
+        savedPins.push({ lat, lng, note });
+        savePins(savedPins);
+      }
+    });
+  </script>
+</body>
+</html>
