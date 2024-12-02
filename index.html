@@ -87,6 +87,9 @@
       const notes = textarea.value;
       saveNotes(lat, lng, notes);
       alert('Notes saved!');
+      // Test localStorage
+localStorage.setItem('testKey', 'testValue');
+console.log(localStorage.getItem('testKey')); // Should output: 'testValue'
     };
   </script>
 </body>
