@@ -57,3 +57,6 @@
   </script>
 </body>
 </html>
+git add index.html
+git commit -m "Added map functionality"
+git push origin main
