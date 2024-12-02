@@ -18,6 +18,10 @@
       resize: none;
       margin-bottom: 10px;
     }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
@@ -37,32 +41,42 @@
 
     // Initialize the map
     const map = L.map('map', {
-      crs: L.CRS.Simple, // Use Simple coordinate reference system
-      maxBounds: bounds, // Constrain the view to the image bounds
-      maxZoom: 4, // Maximum zoom level
-      minZoom: -2, // Minimum zoom level
+      crs: L.CRS.Simple,
+      maxBounds: bounds,
+      maxZoom: 4,
+      minZoom: -2,
+      zoomControl: true, // Ensure zoom controls are visible on mobile
     });
 
-    // Set map bounds and initial view
+    // Fit the map bounds to the image dimensions
     map.fitBounds(bounds);
 
     // Add image overlay
     const imageUrl = "https://media.wizards.com/2015/images/dnd/resources/Sword-Coast-Map_HighRes.jpg";
     L.imageOverlay(imageUrl, bounds).addTo(map);
 
-    // Function to save notes to local storage
+    // Function to save notes to localStorage
     function saveNotes(lat, lng, notes) {
-      const key = `pin-${lat}-${lng}`;
-      localStorage.setItem(key, notes);
+      try {
+        const key = `pin-${lat}-${lng}`;
+        localStorage.setItem(key, notes);
+      } catch (error) {
+        console.error('Error saving notes:', error);
+      }
     }
 
-    // Function to retrieve notes from local storage
+    // Function to retrieve notes from localStorage
     function getNotes(lat, lng) {
-      const key = `pin-${lat}-${lng}`;
-      return localStorage.getItem(key) || '';
+      try {
+        const key = `pin-${lat}-${lng}`;
+        return localStorage.getItem(key) || '';
+      } catch (error) {
+        console.error('Error retrieving notes:', error);
+        return '';
+      }
     }
 
-    // Add click event to create custom pins
+    // Add event listener for creating pins
     map.on('click', function (event) {
       const { lat, lng } = event.latlng;
 
@@ -81,15 +95,12 @@
       }).openPopup();
     });
 
-    // Update notes in local storage
+    // Update notes in localStorage
     window.updateNotes = function (lat, lng, buttonElement) {
       const textarea = buttonElement.previousElementSibling;
       const notes = textarea.value;
       saveNotes(lat, lng, notes);
       alert('Notes saved!');
-      // Test localStorage
-localStorage.setItem('testKey', 'testValue');
-console.log(localStorage.getItem('testKey')); // Should output: 'testValue'
     };
   </script>
 </body>
