@@ -3,57 +3,91 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Interactive Map with Notes</title>
+  <title>Interactive Sword Coast Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     #map {
-      height: 100vh;
+      width: 100%;
+      height: 90vh;
     }
-    .leaflet-popup-content-wrapper {
-      max-width: 200px;
+    .popup-input {
+      display: flex;
+      flex-direction: column;
+    }
+    .popup-input textarea {
+      resize: none;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 <body>
+  <h1>Interactive Sword Coast Map</h1>
   <div id="map"></div>
-
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    // Map image dimensions
+    const mapWidth = 10200;
+    const mapHeight = 6600;
+
+    // Calculate map bounds
+    const bounds = [
+      [0, 0], // Top-left corner
+      [mapHeight, mapWidth] // Bottom-right corner
+    ];
+
     // Initialize the map
-    const map = L.map('map').setView([51.505, -0.09], 13); // Default location (London)
-    L.tileLayer('https://media.wizards.com/2015/images/dnd/resources/Sword-Coast-Map_HighRes.jpg', {
-      maxZoom: 19,
-      attribution: 'Wizards of the Coast'
-    }).addTo(map);
+    const map = L.map('map', {
+      crs: L.CRS.Simple, // Use Simple coordinate reference system
+      maxBounds: bounds, // Constrain the view to the image bounds
+      maxZoom: 4, // Maximum zoom level
+      minZoom: -2, // Minimum zoom level
+    });
 
-    // Retrieve saved pins from localStorage
-    const savedPins = JSON.parse(localStorage.getItem('mapPins')) || [];
+    // Set map bounds and initial view
+    map.fitBounds(bounds);
 
-    // Function to save pins to localStorage
-    function savePins(pins) {
-      localStorage.setItem('mapPins', JSON.stringify(pins));
+    // Add image overlay
+    const imageUrl = "https://media.wizards.com/2015/images/dnd/resources/Sword-Coast-Map_HighRes.jpg";
+    L.imageOverlay(imageUrl, bounds).addTo(map);
+
+    // Function to save notes to local storage
+    function saveNotes(lat, lng, notes) {
+      const key = `pin-${lat}-${lng}`;
+      localStorage.setItem(key, notes);
     }
 
-    // Add markers for saved pins
-    savedPins.forEach(({ lat, lng, note }) => {
-      const marker = L.marker([lat, lng]).addTo(map);
-      marker.bindPopup(note || 'No note added');
+    // Function to retrieve notes from local storage
+    function getNotes(lat, lng) {
+      const key = `pin-${lat}-${lng}`;
+      return localStorage.getItem(key) || '';
+    }
+
+    // Add click event to create custom pins
+    map.on('click', function (event) {
+      const { lat, lng } = event.latlng;
+
+      // Create a marker
+      const marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+      // Add popup with a textarea for notes
+      marker.bindPopup(function () {
+        const notes = getNotes(lat, lng);
+        return `
+          <div class="popup-input">
+            <textarea rows="4" cols="20" placeholder="Add notes here...">${notes}</textarea>
+            <button onclick="updateNotes(${lat}, ${lng}, this)">Save Notes</button>
+          </div>
+        `;
+      }).openPopup();
     });
 
-    // Add click event to create a pin
-    map.on('click', (e) => {
-      const { lat, lng } = e.latlng;
-      const note = prompt('Enter a note for this pin:');
-      if (note !== null) {
-        // Create a new pin
-        const marker = L.marker([lat, lng]).addTo(map);
-        marker.bindPopup(note || 'No note added').openPopup();
-
-        // Save pin to localStorage
-        savedPins.push({ lat, lng, note });
-        savePins(savedPins);
-      }
-    });
+    // Update notes in local storage
+    window.updateNotes = function (lat, lng, buttonElement) {
+      const textarea = buttonElement.previousElementSibling;
+      const notes = textarea.value;
+      saveNotes(lat, lng, notes);
+      alert('Notes saved!');
+    };
   </script>
 </body>
 </html>
